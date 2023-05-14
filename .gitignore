@@ -45,4 +45,5 @@ CMakeLists.txt~
 # Emacs backup files
 *.*~
 
-
+# build directories
+build
