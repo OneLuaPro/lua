@@ -26,8 +26,8 @@
 
 # ------------------------------------------------------------------------------
 # Create static Lua library
-add_library(liblua STATIC)
-target_sources(liblua
+add_library(lib${PROJECT_NAME} STATIC)
+target_sources(lib${PROJECT_NAME}
   PRIVATE lapi.c lctype.c lfunc.c lmathlib.c loslib.c ltable.c lundump.c
   lauxlib.c ldblib.c lgc.c lmem.c lparser.c ltablib.c lutf8lib.c lbaselib.c
   ldebug.c linit.c loadlib.c lstate.c ltm.c lvm.c lcode.c ldo.c liolib.c
@@ -38,59 +38,55 @@ target_sources(liblua
   PUBLIC FILE_SET HEADERS
   FILES lua.h luaconf.h lualib.h lauxlib.h lua.hpp
 )
+target_include_directories(lib${PROJECT_NAME}
+  PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+  "$<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}>"
+)
 
 # ------------------------------------------------------------------------------
 # Create and link lua binaries
 add_executable(lua lua.c)
 add_executable(luac luac.c)
-target_link_libraries(lua liblua)
-target_link_libraries(luac liblua)
-
-# ------------------------------------------------------------------------------
-# Common properties
-set_target_properties(liblua lua luac PROPERTIES C_STANDARD 99)
+target_link_libraries(lua lib${PROJECT_NAME})
+target_link_libraries(luac lib${PROJECT_NAME})
 
 # ------------------------------------------------------------------------------
 # Installation instructions
 install(
-  TARGETS
-    liblua
-    lua
-    luac
-    FILE_SET HEADERS
-  RUNTIME
-    DESTINATION ${INSTALL_BINDIR}
-    COMPONENT bin
-  LIBRARY
-    DESTINATION ${INSTALL_LIBDIR}
-    COMPONENT lib
-  ARCHIVE
-    DESTINATION ${INSTALL_LIBDIR}
-    COMPONENT lib
-  PUBLIC_HEADER
-    DESTINATION ${INSTALL_INCLUDEDIR}
-    COMPONENT dev
+  TARGETS lib${PROJECT_NAME} EXPORT lib${PROJECT_NAME}Targets
+  TARGETS lua luac FILE_SET HEADERS
+  RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT bin
+  LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT lib
+  ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT lib
+  PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
+)
+install(
+  EXPORT lib${PROJECT_NAME}Targets
+  FILE lib${PROJECT_NAME}Targets.cmake
+  DESTINATION ${INSTALL_CMAKEDIR}
 )
 
 # ------------------------------------------------------------------------------
 # Create and install CMake configuration files for lua
 include(CMakePackageConfigHelpers)
-
+# https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html
 configure_package_config_file(
-  ${PROJECT_SOURCE_DIR}/cmake/luaConfig.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/luaConfig.cmake
+  ${PROJECT_SOURCE_DIR}/cmake/lib${PROJECT_NAME}Config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}Config.cmake
   INSTALL_DESTINATION ${INSTALL_CMAKEDIR}
+  PATH_VARS INSTALL_DIR INSTALL_INCLUDEDIR INSTALL_LIBDIR
 )
 
 write_basic_package_version_file(
-  ${CMAKE_CURRENT_BINARY_DIR}/luaConfigVersion.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}ConfigVersion.cmake
   VERSION ${PROJECT_VERSION}
-  COMPATIBILITY SameMajorVersion
+  COMPATIBILITY SameMinorVersion
 )
 
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/luaConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/luaConfigVersion.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}Config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}ConfigVersion.cmake
   DESTINATION ${INSTALL_CMAKEDIR}
 )

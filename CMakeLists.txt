@@ -63,6 +63,10 @@ project(lua
   LANGUAGES C
   VERSION ${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_PATCH}
 )
+# Lua is completely ANSI-C (https://www.lua.org/faq.html#1.1)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_EXTENSIONS OFF)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # ------------------------------------------------------------------------------
 # Other settings
@@ -80,19 +84,21 @@ include (GNUInstallDirs)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+set(INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "Installation prefix")
+set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX} CACHE PATH "Install base dir for package config.")
 set(INSTALL_LIBDIR ${CMAKE_INSTALL_LIBDIR} CACHE PATH "Installation directory for libraries")
 set(INSTALL_BINDIR ${CMAKE_INSTALL_BINDIR} CACHE PATH "Installation directory for executables")
 set(INSTALL_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR} CACHE PATH "Installation directory for header files")
 set(INSTALL_DOCDIR ${CMAKE_INSTALL_DOCDIR} CACHE PATH "Installation directorx for documentation")
 set(INSTALL_MANDIR ${CMAKE_INSTALL_MANDIR} CACHE PATH "Installation directorx for manpages")
-set(DEF_INSTALL_CMAKEDIR share/cmake/${PROJECT_NAME})
+set(DEF_INSTALL_CMAKEDIR share/cmake/lib${PROJECT_NAME})
 set(INSTALL_CMAKEDIR ${DEF_INSTALL_CMAKEDIR} CACHE PATH "Installation directory for CMake files")
 
 # ------------------------------------------------------------------------------
 # Report to user
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "C compiler flags: ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_${CMAKE_BUILD_TYPE_UC}}")
-message(STATUS "Prefix directory: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "Installation prefix: ${INSTALL_PREFIX}")
 foreach(p BIN INCLUDE LIB DOC MAN CMAKE)
   file(TO_NATIVE_PATH ${CMAKE_INSTALL_PREFIX}/${INSTALL_${p}DIR} _path)
   message(STATUS "Installing ${p} components to ${_path}")

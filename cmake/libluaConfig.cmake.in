@@ -23,9 +23,9 @@
 
 @PACKAGE_INIT@
 
-# include("${CMAKE_CURRENT_LIST_DIR}/luaTargets.cmake")
-check_required_components(
-  "lua"
-  "luac"
-  "liblua"
-)
+include("${CMAKE_CURRENT_LIST_DIR}/libluaTargets.cmake")
+# https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html
+set_and_check(LIBLUA_INSTALLDIR "@PACKAGE_INSTALL_DIR@")
+set_and_check(LIBLUA_INCLUDEDIR "@PACKAGE_INSTALL_INCLUDEDIR@")
+set_and_check(LIBLUA_LIBDIR "@PACKAGE_INSTALL_LIBDIR@")
+check_required_components(liblua)
