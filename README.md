@@ -65,4 +65,8 @@ Lua 5.4
 C:\Users\John Doe>
 ```
 
+## Additional Lua Modules
 
+List of Lua extensions which fit into Lua with CMake Support:
+
+- LuaSocket (https://github.com/KritzelKratzel/luasocket)
