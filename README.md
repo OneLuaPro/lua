@@ -67,6 +67,11 @@ C:\Users\John Doe>
 
 ## Additional Lua Modules
 
-List of Lua extensions which fit into Lua with CMake Support:
+Table of Lua extensions which smoothly fit into Lua with CMake Support:
 
-- LuaSocket (https://github.com/KritzelKratzel/luasocket)
+| Extension Name                                           | Purpose                                                      | Forked from                               |
+| -------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------- |
+| [LuaSocket](https://github.com/KritzelKratzel/luasocket) | Network support for the Lua language                         | https://github.com/lunarmodules/luasocket |
+| [librs232](https://github.com/KritzelKratzel/librs232)   | Multiplatform library for serial communications over RS-232 (serial port) | https://github.com/srdgame/librs232       |
+
+More will follow soon.
