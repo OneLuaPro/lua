@@ -74,6 +74,7 @@ Table of Lua modules which smoothly fit into **Lua with CMake Support**:
 | [LuaSocket](https://github.com/KritzelKratzel/luasocket)     | Network support for the Lua language                         | https://github.com/lunarmodules/luasocket     |
 | [librs232](https://github.com/KritzelKratzel/librs232)       | Multiplatform library for serial communications over RS-232 (serial port) | https://github.com/srdgame/librs232           |
 | [LuaFileSystem](https://github.com/KritzelKratzel/luafilesystem) | Complements the set of functions related to file systems offered by the standard Lua distribution | https://github.com/lunarmodules/luafilesystem |
+| [argparse](https://github.com/KritzelKratzel/argparse)       | argparse is a feature-rich command line parser for Lua inspired by argparse for Python. | https://github.com/luarocks/argparse          |
 
 More will follow soon.
 
