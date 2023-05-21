@@ -75,6 +75,7 @@ Table of Lua modules which smoothly fit into **Lua with CMake Support**:
 | [librs232](https://github.com/KritzelKratzel/librs232)       | Multiplatform library for serial communications over RS-232 (serial port) | https://github.com/srdgame/librs232           |
 | [LuaFileSystem](https://github.com/KritzelKratzel/luafilesystem) | Complements the set of functions related to file systems offered by the standard Lua distribution | https://github.com/lunarmodules/luafilesystem |
 | [argparse](https://github.com/KritzelKratzel/argparse)       | argparse is a feature-rich command line parser for Lua inspired by argparse for Python. | https://github.com/luarocks/argparse          |
+| [Luacheck](https://github.com/KritzelKratzel/luacheck)       | Luacheck is a static analyzer and a linter for Lua. It detects various issues such as usage of undefined global variables, unused variables and values, accessing uninitialized variables, unreachable code and more. | https://github.com/lunarmodules/luacheck      |
 
 More will follow soon.
 
