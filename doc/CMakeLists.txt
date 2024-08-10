@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2023 Kritzel Kratzel.
+# Copyright (c) 2023-2024 Kritzel Kratzel.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in 
@@ -25,7 +25,7 @@
 # ------------------------------------------------------------------------------
 
 install(
-  FILES index.css lua.css manual.html logo.gif osi-certified-72x60.png
+  FILES index.css lua.css manual.html logo.gif OSIApproved_100X125.png
   contents.html manual.css readme.html
   DESTINATION ${INSTALL_DOCDIR}
   COMPONENT doc

@@ -1,5 +1,5 @@
 # Lua with CMake Support
-Unaltered [Lua](http://www.lua.org/) source code and documentation with [CMake](https://cmake.org/) build infrastructure. This repository contains Lua Version 5.4.6 sources extracted from https://www.lua.org/ftp/lua-5.4.6.tar.gz. Tested generators and architectures are:
+Unaltered [Lua](http://www.lua.org/) source code and documentation with [CMake](https://cmake.org/) build infrastructure. This repository contains Lua Version 5.4.7 sources extracted from https://www.lua.org/ftp/lua-5.4.7.tar.gz. Tested generators and architectures are:
 
 - Visual Studio 17 2022, Win32
 - Visual Studio 17 2022, x64
@@ -28,14 +28,13 @@ cd lua
 CMake strongly encourages out-of-source builds.
 
 ```cmd
-mkdir build
-cd build
+mkdir build && cd build
 cmake .. -G "Visual Studio 17 2022" -A <arch>
 cmake --build . --config Release
 cmake --install . --config Release
 ```
 
-Replace `<arch>` with your desired architecture. Available architectures with selected `Visual Studio 17 2022` generator are `Win32`, `x64`, `ARM` and `ARM64`. Default installation directory is `C:/Apps/lua-5.4.6` where a directory structure according to [GNU Coding Standards](https://www.gnu.org/prep/standards/html_node/Directory-Variables.html) is created:
+Replace `<arch>` with your desired architecture. Available architectures with selected `Visual Studio 17 2022` generator are `Win32`, `x64`, `ARM` and `ARM64`. Default installation directory is `C:/Apps/lua-5.4.7` where a directory structure according to [GNU Coding Standards](https://www.gnu.org/prep/standards/html_node/Directory-Variables.html) is created:
 
 - `bin`: Lua binaries `lua.exe` and `luac.exe`, both statically linked, no DLL dependency,
 - `include`: Public header files,
@@ -51,31 +50,19 @@ cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_INSTALL_PREFIX="C:\Foo\Bar"
 Finally add the path to Lua to Windows search path for executables. 
 
 ```cmd
-setx PATH "%PATH%;C:\Apps\lua-5.4.6\bin"
+setx PATH "%PATH%;C:\Apps\lua-5.4.7\bin"
 ```
 
 Open an new command window and test lua. Use `CTRL-C` to leave Lua in interactive mode.
 
 ```cmd
 C:\Users\John Doe>lua
-Lua 5.4.6  Copyright (C) 1994-2023 Lua.org, PUC-Rio
+Lua 5.4.7  Copyright (C) 1994-2024 Lua.org, PUC-Rio
 > print(_VERSION)
 Lua 5.4
 >
 C:\Users\John Doe>
 ```
 
-## Additional Lua Modules
 
-Table of Lua modules which smoothly fit into **Lua with CMake Support**:
-
-| Extension Name                                               | Purpose                                                      | Forked from                                   |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------- |
-| [LuaSocket](https://github.com/KritzelKratzel/luasocket)     | Network support for the Lua language                         | https://github.com/lunarmodules/luasocket     |
-| [librs232](https://github.com/KritzelKratzel/librs232)       | Multiplatform library for serial communications over RS-232 (serial port) | https://github.com/srdgame/librs232           |
-| [LuaFileSystem](https://github.com/KritzelKratzel/luafilesystem) | Complements the set of functions related to file systems offered by the standard Lua distribution | https://github.com/lunarmodules/luafilesystem |
-| [argparse](https://github.com/KritzelKratzel/argparse)       | argparse is a feature-rich command line parser for Lua inspired by argparse for Python. | https://github.com/luarocks/argparse          |
-| [Luacheck](https://github.com/KritzelKratzel/luacheck)       | Luacheck is a static analyzer and a linter for Lua. It detects various issues such as usage of undefined global variables, unused variables and values, accessing uninitialized variables, unreachable code and more. | https://github.com/lunarmodules/luacheck      |
-
-More will follow soon.
 

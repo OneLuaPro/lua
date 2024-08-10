@@ -7,7 +7,7 @@ do use Lua, then you should give us credit by including the appropriate
 copyright notice somewhere in your product or its documentation. For details, 
 see this.
 
-Copyright (c) 1994–2023 Lua.org, PUC-Rio.
+Copyright (c) 1994–2024 Lua.org, PUC-Rio.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in 
