@@ -775,11 +775,28 @@ static int pmain (lua_State *L) {
   return 1;
 }
 
+#ifdef _WIN32
+/* Sets the environment variable 'name' to the absolute path of 'file', but
+ * only if the user has not set it already and the file really exists. */
+static void setPathVarIfUnset (const wchar_t *name, const wchar_t *file) {
+  wchar_t full[MAX_PATH];
+  DWORD attr;
+  if (GetEnvironmentVariableW(name, NULL, 0) != 0)
+    return;  /* respect the user's own setting */
+  if (_wfullpath(full, file, MAX_PATH) == NULL)
+    return;  /* resolves '..' and fails if the buffer is too small */
+  attr = GetFileAttributesW(full);
+  if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY))
+    return;  /* no bundle shipped: leave the variable alone */
+  _wputenv_s(name, full);
+}
+#endif
+
 int main (int argc, char **argv) {
   int status, result;
 #ifdef _WIN32
   {
-    /* DETERMINISTIC DLL RESOLUTION FOR ONELUAPRO:
+    /* DETERMINISTIC DLL RESOLUTION FOR OneLuaPro:
      * To keep the '/bin' directory clean, we do not load 'lua.dll' from there.
      * Instead, we redirect the search to 'lib/lua/<MAJOR>.<MINOR>/'.
      *
@@ -810,6 +827,20 @@ int main (int argc, char **argv) {
          * Since lua.dll is delay-loaded, it will be successfully
          * found in the version-specific sub-directory. */
 	SetDllDirectoryW(dllDir);
+
+	/* PORTABLE CA BUNDLE RESOLUTION FOR OneLuaPro:
+	 * The bundle is resolved relative to the executable: '/bin/../etc/ssl/cert.pem'.
+	 * - SSL_CERT_FILE overrides LibreSSL's hardcoded absolute paths.
+	 * - CURL_CA_INFO is read by the azure extension for its libcurl transport.
+	 * Values set by the user win. _wputenv_s keeps the change local to
+	 * this process and its children. It must happen before any module is
+	 * loaded, as DLLs with a static CRT copy the environment at load time. */
+	wchar_t certPath[MAX_PATH];
+	int certLen = _snwprintf(certPath, MAX_PATH,
+				 L"%s\\..\\etc\\ssl\\cert.pem", exePath);
+	if (certLen > 0 && certLen < MAX_PATH) {
+	  setPathVarIfUnset(L"CURL_CA_INFO", certPath);
+	}
       }
     }
   }
