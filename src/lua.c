@@ -35,6 +35,9 @@
 #define LUA_RLLIB_VAR		"LUA_READLINELIB"
 #endif
 
+#ifdef _WIN32
+#define OLP_MAX_PATH 32768 /* same as PATHCCH_MAX_CCH, but without pathcch.h (Win7) */
+#endif
 
 #define LUA_INITVARVERSION	LUA_INIT_VAR LUA_VERSUFFIX
 
@@ -779,71 +782,97 @@ static int pmain (lua_State *L) {
 /* Sets the environment variable 'name' to the absolute path of 'file', but
  * only if the user has not set it already and the file really exists. */
 static void setPathVarIfUnset (const wchar_t *name, const wchar_t *file) {
-  wchar_t full[MAX_PATH];
+  wchar_t full[OLP_MAX_PATH];
   DWORD attr;
   if (GetEnvironmentVariableW(name, NULL, 0) != 0)
     return;  /* respect the user's own setting */
-  if (_wfullpath(full, file, MAX_PATH) == NULL)
+  if (_wfullpath(full, file, OLP_MAX_PATH) == NULL)
     return;  /* resolves '..' and fails if the buffer is too small */
   attr = GetFileAttributesW(full);
   if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY))
     return;  /* no bundle shipped: leave the variable alone */
   _wputenv_s(name, full);
 }
+static void olpSetupWindows (void) {
+  /* DETERMINISTIC DLL RESOLUTION FOR OneLuaPro:
+   * To keep the '/bin' directory clean, we do not load 'lua.dll' from there.
+   * Instead, we redirect the search to 'lib/lua/<MAJOR>.<MINOR>/'.
+   *
+   * IMPORTANT ARCHITECTURAL NOTE:
+   * This requires the executable to be linked with the '/DELAYLOAD:lua.dll'
+   * linker option and against 'delayimp.lib'.
+   * Delay-loading ensures that the process starts FIRST, allowing this
+   * code to set the custom search path BEFORE the OS tries to find the DLL.
+   *
+   * This guarantees that the interpreter and all DLL-plugins share the exact
+   * same DLL instance, which is e.g. critical for thread-pool stability. */
+  wchar_t exePath[OLP_MAX_PATH];
+  DWORD exeLen = GetModuleFileNameW(NULL, exePath, OLP_MAX_PATH);
+  if (exeLen > 0 && exeLen < OLP_MAX_PATH) {
+    wchar_t *lastSlash = wcsrchr(exePath, L'\\');
+    if (lastSlash) {
+      /* Strip executable name (e.g., 'lua.exe') to get the base '/bin' folder */
+      *lastSlash = L'\0';
+      /* Construct the relative path to the versioned library folder.
+       * The LUAI_TOWSTR macros inject the version numbers from 'lua.h' at
+       * compile time. */
+      wchar_t dllDir[OLP_MAX_PATH];
+      _snwprintf(dllDir, OLP_MAX_PATH,
+		 L"%s\\..\\lib\\lua\\"
+		 LUAI_TOWSTR(LUA_VERSION_MAJOR_N)
+		 L"."
+		 LUAI_TOWSTR(LUA_VERSION_MINOR_N),exePath);
+      /* Inject custom search path at the top of the DLL search order.
+       * Since lua.dll is delay-loaded, it will be successfully
+       * found in the version-specific sub-directory. */
+      SetDllDirectoryW(dllDir);
+
+      /* PORTABLE CA BUNDLE RESOLUTION FOR OneLuaPro:
+       * The bundle is resolved relative to the executable: '/bin/../etc/ssl/cert.pem'.
+       * - SSL_CERT_FILE overrides LibreSSL's hardcoded absolute paths.
+       * - CURL_CA_INFO is read by the azure extension for its libcurl transport.
+       * Values set by the user win. _wputenv_s keeps the change local to
+       * this process and its children. It must happen before any module is
+       * loaded, as DLLs with a static CRT copy the environment at load time. */
+      wchar_t certPath[OLP_MAX_PATH];
+      int certLen = _snwprintf(certPath, OLP_MAX_PATH,
+			       L"%s\\..\\etc\\ssl\\cert.pem", exePath);
+      if (certLen > 0 && certLen < OLP_MAX_PATH) {
+	setPathVarIfUnset(L"CURL_CA_INFO", certPath);
+      }
+      /* THIRD-PARTY DLL FOLDER FOR OneLuaPro:
+       * User-supplied runtime DLLs (e.g. Oracle Instant Client) go to
+       * '/lib/3rdparty'. The folder is put in FRONT of PATH of this process
+       * only, so that whatever is placed there always wins over other PATH
+       * entries. If the folder is empty or missing, nothing changes. */
+      wchar_t extDir[OLP_MAX_PATH];
+      int extLen = _snwprintf(extDir, OLP_MAX_PATH, L"%s\\..\\lib\\3rdparty", exePath);
+      if (extLen > 0 && extLen < OLP_MAX_PATH) {
+	wchar_t *oldPath = NULL;
+	size_t oldLen = 0;
+	_wdupenv_s(&oldPath, &oldLen, L"PATH");
+	size_t cap = (oldPath ? wcslen(oldPath) : 0) + OLP_MAX_PATH + 2;
+	wchar_t *newPath = (wchar_t *)malloc(cap * sizeof(wchar_t));
+	if (newPath) {
+	  if (oldPath && *oldPath)
+	    _snwprintf(newPath, cap, L"%s;%s", extDir, oldPath);
+	  else
+	    _snwprintf(newPath, cap, L"%s", extDir);
+	  newPath[cap - 1] = L'\0';
+	  _wputenv_s(L"PATH", newPath);
+	  free(newPath);
+	}
+	free(oldPath);
+      }
+    }
+  }
+}
 #endif
 
 int main (int argc, char **argv) {
   int status, result;
 #ifdef _WIN32
-  {
-    /* DETERMINISTIC DLL RESOLUTION FOR OneLuaPro:
-     * To keep the '/bin' directory clean, we do not load 'lua.dll' from there.
-     * Instead, we redirect the search to 'lib/lua/<MAJOR>.<MINOR>/'.
-     *
-     * IMPORTANT ARCHITECTURAL NOTE:
-     * This requires the executable to be linked with the '/DELAYLOAD:lua.dll'
-     * linker option and against 'delayimp.lib'.
-     * Delay-loading ensures that the process starts FIRST, allowing this
-     * code to set the custom search path BEFORE the OS tries to find the DLL.
-     *
-     * This guarantees that the interpreter and all DLL-plugins share the exact
-     * same DLL instance, which is e.g. critical for thread-pool stability. */
-    wchar_t exePath[MAX_PATH];
-    if (GetModuleFileNameW(NULL, exePath, MAX_PATH) > 0) {
-      wchar_t *lastSlash = wcsrchr(exePath, L'\\');
-      if (lastSlash) {
-	/* Strip executable name (e.g., 'lua.exe') to get the base '/bin' folder */
-	*lastSlash = L'\0';
-	/* Construct the relative path to the versioned library folder.
-         * The LUAI_TOWSTR macros inject the version numbers from 'lua.h' at
-	 * compile time. */
-	wchar_t dllDir[MAX_PATH];
-	_snwprintf(dllDir, MAX_PATH,
-		   L"%s\\..\\lib\\lua\\"
-		   LUAI_TOWSTR(LUA_VERSION_MAJOR_N)
-		   L"."
-		   LUAI_TOWSTR(LUA_VERSION_MINOR_N),exePath);
-	/* Inject custom search path at the top of the DLL search order.
-         * Since lua.dll is delay-loaded, it will be successfully
-         * found in the version-specific sub-directory. */
-	SetDllDirectoryW(dllDir);
-
-	/* PORTABLE CA BUNDLE RESOLUTION FOR OneLuaPro:
-	 * The bundle is resolved relative to the executable: '/bin/../etc/ssl/cert.pem'.
-	 * - SSL_CERT_FILE overrides LibreSSL's hardcoded absolute paths.
-	 * - CURL_CA_INFO is read by the azure extension for its libcurl transport.
-	 * Values set by the user win. _wputenv_s keeps the change local to
-	 * this process and its children. It must happen before any module is
-	 * loaded, as DLLs with a static CRT copy the environment at load time. */
-	wchar_t certPath[MAX_PATH];
-	int certLen = _snwprintf(certPath, MAX_PATH,
-				 L"%s\\..\\etc\\ssl\\cert.pem", exePath);
-	if (certLen > 0 && certLen < MAX_PATH) {
-	  setPathVarIfUnset(L"CURL_CA_INFO", certPath);
-	}
-      }
-    }
-  }
+  olpSetupWindows();
 #endif
   lua_State *L = luaL_newstate();  /* create state */
   if (L == NULL) {

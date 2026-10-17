@@ -126,6 +126,15 @@ install(
   FILE lib${PROJECT_NAME}Targets.cmake
   DESTINATION ${INSTALL_CMAKEDIR}
 )
+# Folder for user-supplied third-party runtime DLLs (e.g. Oracle Instant
+# Client). It is put in front of PATH by lua.exe at startup (see lua.c).
+# The README makes sure the folder exists and tells the user what it is for.
+install(
+  FILES ${PROJECT_SOURCE_DIR}/cmake/README-3rdparty.txt
+  DESTINATION ${INSTALL_LIBDIR}/3rdparty
+  RENAME README.txt
+  COMPONENT bin
+)
 
 # ------------------------------------------------------------------------------
 # Create and install CMake configuration files for lua
